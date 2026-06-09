@@ -53,14 +53,14 @@ def emit_bpf_condition(ast: FilterStatement):
         val = ast.condition.value
 
         if field == "TCP.WINDOW_SIZE":
-            return f"(tcp[14:2] {op} {val})"
+            return f"tcp[14:2] {op} {val}"
             
         elif field == "IP.TTL":
-            return f"(ip[8] {op} {val})"
+            return f"ip[8] {op} {val}"
 
     return ''
 
 
 def emit_bpf(ast: FilterStatement):
     fragments = filter(lambda x: x is not '', [emit_bpf_endpoints(ast), emit_bpf_condition(ast)])
-    return " and".join(fragments)
+    return " and ".join(fragments)

@@ -5,7 +5,7 @@ tokens = (
     'IP_ADDRESS', 'NUMBER',
     'FIELD', 'OPERATOR', 'VALUE',
     'COLON', 'DOT',
-	'MAC_ADDRESS', 'AT'
+    'MAC_ADDRESS', 'AT'
 )
 
 
@@ -16,14 +16,14 @@ t_OPERATOR = r'==|!=|>=|<=|=|<|>'
 
 
 reserved = {
-	'FROM': 'FROM',
-	'TO': 'TO',
-	'WHERE': 'WHERE'
+    'FROM': 'FROM',
+    'TO': 'TO',
+    'WHERE': 'WHERE'
 }
 
 
 def t_IP_ADDRESS(t):
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
+    r'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)'
     return t
 
 

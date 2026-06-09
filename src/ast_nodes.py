@@ -1,6 +1,6 @@
 # An endpoint is something that can receive data such as an Ethernet port.
 class Endpoint():
-    def __init__(self, ip: str, mac: str, port: int = None):
+    def __init__(self, ip: str = None, mac: str = None, port: int = None):
         self.ip = ip
         self.port = port
         self.mac = mac    

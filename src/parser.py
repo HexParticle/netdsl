@@ -37,14 +37,14 @@ def p_endpoint_ip_only(p):
     '''
     endpoint : IP_ADDRESS
     '''
-    p[0] = Endpoint(ip=p[1])
+    p[0] = Endpoint(ip=p[1], mac=None, port=None)
 
 
 def p_endpoint_mac_only(p):
     '''
     endpoint : MAC_ADDRESS
     '''
-    p[0] = Endpoint(mac=p[1])
+    p[0] = Endpoint(mac=p[1], ip=None, port=None)
 
 
 def p_where_clause(p):
