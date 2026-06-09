@@ -1,6 +1,6 @@
 import ply.yacc as yacc
-from lexer import tokens
-from ast_nodes import Endpoint, Condition, FilterStatement
+from .lexer import tokens
+from .ast_nodes import Endpoint, Condition, FilterStatement
 
 
 def p_statement_root(p):

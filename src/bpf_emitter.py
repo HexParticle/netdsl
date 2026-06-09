@@ -1,17 +1,21 @@
-from ast_nodes import FilterStatement
+from .ast_nodes import FilterStatement
 
 def emit_bpf(ast: FilterStatement):
     fragments = []
 
-    src_str = f'src host {ast.source.ip}'
+    src_str = f'(src host {ast.source.ip}'
     if ast.source.port:
-        src_str = f'{src_str} and src port {ast.source.port}'
+        src_str = f'{src_str} and src port {ast.source.port})'
+    else:
+        src_str = f'{src_str})'
 
     fragments.append(src_str)
 
-    dst_str = f'dst host {ast.destination.ip}'
+    dst_str = f'(dst host {ast.destination.ip}'
     if ast.destination.port:
-        dst_str = f'{dst_str} and dst port {ast.destination.port}'	
+        dst_str = f'{dst_str} and dst port {ast.destination.port})'
+    else:
+        dst_str = f'{dst_str})'
 
     fragments.append(dst_str)
 
@@ -21,9 +25,9 @@ def emit_bpf(ast: FilterStatement):
         val = ast.condition.value
 
         if field == "TCP.WINDOW_SIZE":
-            fragments.append(f"tcp[14:2] {op} {val}")
+            fragments.append(f"(tcp[14:2] {op} {val})")
             
         elif field == "IP.TTL":
-            fragments.append(f"ip[8] {op} {val}")
+            fragments.append(f"(ip[8] {op} {val})")
 
     return " and ".join(fragments)
