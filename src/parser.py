@@ -12,20 +12,45 @@ def p_statement_root(p):
         p[0] = FilterStatement(source=p[2], destination=p[4])
 
 
-def p_endpoint_complex(p):
-    '''endpoint : IP_ADDRESS COLON NUMBER'''
-    p[0] = Endpoint(ip=p[1], port=p[3])
+def p_endpoint_ip_and_port(p):
+    '''
+    endpoint : IP_ADDRESS COLON NUMBER
+    '''
+    p[0] = Endpoint(ip=p[1], mac=None, port=p[3])
+    
+
+def p_endpoint_ip_and_mac(p):
+    '''
+    endpoint : IP_ADDRESS AT MAC_ADDRESS
+    '''
+    p[0] = Endpoint(ip=p[1], mac=p[3], port=None)
 
 
-def p_endpoint_simple(p):
-    '''endpoint : IP_ADDRESS'''
+def p_endpoint_ip_port_and_mac(p):
+    '''
+    endpoint : IP_ADDRESS COLON NUMBER AT MAC_ADDRESS
+    '''
+    p[0] = Endpoint(ip=p[1], port=p[3], mac=p[5])
+
+
+def p_endpoint_ip_only(p):
+    '''
+    endpoint : IP_ADDRESS
+    '''
     p[0] = Endpoint(ip=p[1])
+
+
+def p_endpoint_mac_only(p):
+    '''
+    endpoint : MAC_ADDRESS
+    '''
+    p[0] = Endpoint(mac=p[1])
 
 
 def p_where_clause(p):
     '''where_clause : WHERE FIELD OPERATOR VALUE
 					| WHERE FIELD OPERATOR NUMBER
-    '''
+	'''
     p[0] = Condition(field=p[2], operator=p[3], value=p[4])
 
 

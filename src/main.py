@@ -2,7 +2,7 @@ from . import parser
 from . import bpf_emitter
 
 if __name__ == "__main__":
-    dsl_input = "FROM 192.168.1.1:3000 TO 192.168.1.2 WHERE TCP.WINDOW_SIZE > 1024"
+    dsl_input = "FROM 192.168.1.1:3000@aa:bb:cc:dd:ee:ff TO 192.168.1.2:1090@ff:ee:dd:cc:bb:aa"
     
     ast_root = parser.parse(dsl_input)
 

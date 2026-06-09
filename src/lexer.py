@@ -4,12 +4,14 @@ tokens = (
     'FROM', 'TO', 'WHERE',
     'IP_ADDRESS', 'NUMBER',
     'FIELD', 'OPERATOR', 'VALUE',
-    'COLON', 'DOT'
+    'COLON', 'DOT',
+	'MAC_ADDRESS', 'AT'
 )
 
 
 t_COLON = r':'
 t_DOT = r'\.'
+t_AT = r'\@'
 t_OPERATOR = r'==|!=|>=|<=|=|<|>'
 
 
@@ -22,6 +24,11 @@ reserved = {
 
 def t_IP_ADDRESS(t):
     r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
+    return t
+
+
+def t_MAC_ADDRESS(t):
+    r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})'
     return t
 
 
