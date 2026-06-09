@@ -1,0 +1,56 @@
+import ply.lex as lex
+
+tokens = (
+    'FROM', 'TO', 'WHERE',
+    'IP_ADDRESS', 'NUMBER',
+    'FIELD', 'OPERATOR', 'VALUE',
+    'COLON', 'DOT'
+)
+
+
+t_COLON = r':'
+t_DOT = r'\.'
+t_OPERATOR = r'==|!=|>=|<=|=|<|>'
+
+
+reserved = {
+	'FROM': 'FROM',
+	'TO': 'TO',
+	'WHERE': 'WHERE'
+}
+
+
+def t_IP_ADDRESS(t):
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'
+    return t
+
+
+def t_NUMBER(t):
+    r'\d{1,5}'
+    t.value = int(t.value)
+    return t
+
+
+def t_FIELD(t):
+    r'[A-Za-z_][A-Za-z0-9_\.]*'
+    t.type = reserved.get(t.value, 'FIELD')
+    return t
+
+
+def t_VALUE(t):
+    r'\'[^\']*\''
+    if t.value.startswith("'") and t.value.endswith("'"):
+        t.value = t.value[1:-1]
+    return t
+
+
+t_ignore = ' \t'
+
+
+def t_error(t):
+    print(f"Illegal character '{t.value[0]}' at position {t.lexpos}")
+    t.lexer.skip(1)
+
+
+# Build the lexer
+lexer = lex.lex()

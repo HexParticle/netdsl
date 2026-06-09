@@ -1,0 +1,42 @@
+import ply.yacc as yacc
+from lexer import tokens
+from ast_nodes import Endpoint, Condition, FilterStatement
+
+
+def p_statement_root(p):
+    '''statement : FROM endpoint TO endpoint
+                 | FROM endpoint TO endpoint where_clause'''
+    if len(p) == 6:
+        p[0] = FilterStatement(source=p[2], destination=p[4], condition=p[5])
+    else:
+        p[0] = FilterStatement(source=p[2], destination=p[4])
+
+
+def p_endpoint_complex(p):
+    '''endpoint : IP_ADDRESS COLON NUMBER'''
+    p[0] = Endpoint(ip=p[1], port=p[3])
+
+
+def p_endpoint_simple(p):
+    '''endpoint : IP_ADDRESS'''
+    p[0] = Endpoint(ip=p[1])
+
+
+def p_where_clause(p):
+    '''where_clause : WHERE FIELD OPERATOR VALUE
+					| WHERE FIELD OPERATOR NUMBER
+    '''
+    p[0] = Condition(field=p[2], operator=p[3], value=p[4])
+
+
+def p_error(p):
+    if p:
+        print(f"Syntax error at token {p.type} (Value: {p.value})")
+    else:
+        print("Syntax error: Unexpected end of input")
+
+
+_parser = yacc.yacc()
+
+def parse(input: str):
+    return _parser.parse(input)
