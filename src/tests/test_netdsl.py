@@ -85,6 +85,10 @@ class TestNetDSLCompiler(unittest.TestCase):
 
         self.run_emitted_bpf_should_be_valid_test_cases(test_cases)
 
+    
+    def test_protocol_fields_validity(self):
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()

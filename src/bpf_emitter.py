@@ -2,6 +2,32 @@ from .ast_nodes import FilterStatement
 
 import enum
 
+
+PROTOCOL_FIELDS = [
+    # TCP protocol fields
+    'TCP.WINDOW_SIZE', 'TCP.FLAGS', 'TCP.SEQ_NUM', 
+    'TCP.ACK_NUM', 'TCP.DATA_OFFSET', 'TCP.CHECKSUM', 
+    'TCP.URGENT_POINTER', 'TCP.SRC_PORT', 'TCP.DST_PORT'
+
+    # IP protocol fields
+    'IP.VERSION', 'IP.IHL', 'IP.TTL', 'IP.CHECKSUM',
+    'IP.PROTOCOL', 'IP.FRAG_OFF', 'IP.LENGTH', 'IP.ID',
+    'IP.DSCP', 'IP.ECN', 'IP.DF', 'IP.MF', 'IP.SRC_HOST',
+    'IP.DST_HOST'
+]
+
+
+FIELD_OFF_SIZE = {
+    'TCP.SRC_PORT': (0, 2),
+    'TCP.DST_PORT': (2, 2),
+    'TCP.SEQ_NUM': (4, 4),
+    'TCP.ACK_NUM': (8, 4),
+    'TCP.WINDOW_SIZE': (14, 2),
+    'TCP.CKSUM': (16, 2),
+    'TCP.URGENT_POINTER': (18, 2),
+}
+
+
 class EndpointType(enum.Enum):
     SOURCE = enum.auto()
     DESTINATION = enum.auto()
@@ -46,17 +72,34 @@ def emit_bpf_endpoints(ast: FilterStatement):
     return endpoint_str
 
 
+def emit_bpf_protocol_field_condition_for_tcp(field: str, op: str, value: str):
+    off_size = FIELD_OFF_SIZE.get(field)
+    size = off_size[1]
+
+    if size == 1:
+        return f"TCP[{off_size[0]}] {op} {value}"
+    else:
+        return f"TCP[{off_size[0]}:{off_size[1]}] {op} {value}"
+
+
+def emit_bpf_protocol_field_condition(ast: FilterStatement):
+    condition = ast.condition
+    field = condition.field
+
+    if field.startswith('TCP'):
+        return emit_bpf_protocol_field_condition_for_tcp(field, condition.operator, condition.value)
+    elif field.startswith('IP'):
+        pass
+
+
 def emit_bpf_condition(ast: FilterStatement):
     if ast.condition:
         field = ast.condition.field.upper()
-        op = ast.condition.operator
-        val = ast.condition.value
 
-        if field == "TCP.WINDOW_SIZE":
-            return f"tcp[14:2] {op} {val}"
-            
-        elif field == "IP.TTL":
-            return f"ip[8] {op} {val}"
+        if field not in PROTOCOL_FIELDS:
+            raise ValueError(f"'{field}' cannot be identified as a protocol field.")
+
+        return emit_bpf_protocol_field_condition(ast)
 
     return ''
 
