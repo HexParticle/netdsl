@@ -4,7 +4,7 @@ tokens = (
     'FROM', 'TO', 'WHERE',
     'IP_ADDRESS', 'NUMBER',
     'FIELD', 'OPERATOR', 'VALUE',
-    'COLON', 'DOT',
+    'COLON', 'DOT', 'COMMA',
     'MAC_ADDRESS', 'AT'
 )
 
@@ -12,7 +12,8 @@ tokens = (
 t_COLON = r':'
 t_DOT = r'\.'
 t_AT = r'\@'
-t_OPERATOR = r'==|!=|>=|<=|=|<|>'
+t_OPERATOR = r'!=|>=|<=|=|<|>'
+t_COMMA = r','
 
 
 reserved = {
@@ -51,7 +52,7 @@ def t_VALUE(t):
     return t
 
 
-t_ignore = ' \t'
+t_ignore = ' \t\n\r'
 
 
 def t_error(t):

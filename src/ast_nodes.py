@@ -1,3 +1,5 @@
+import typing 
+
 # An endpoint is something that can receive data such as an Ethernet port.
 class Endpoint():
     def __init__(self, ip: str = None, mac: str = None, port: int = None):
@@ -13,8 +15,27 @@ class Condition:
         self.value = value
 
 
+class ConditionList:
+    def __init__(self, conditions: typing.List[Condition]):
+        self.conditions = conditions
+
+    def __len__(self):
+        return len(self.conditions)
+
+    def __iter__(self):
+        return iter(self.conditions)
+
+    def __add__(self, other):
+        return self.conditions + other
+
+
+class WhereClause:
+    def __init__(self, condition_list: ConditionList):
+        self.condition_list = condition_list
+
+
 class FilterStatement:
-    def __init__(self, source: Endpoint, destination: Endpoint, condition: Condition = None):
+    def __init__(self, source: Endpoint, destination: Endpoint, where_clause: WhereClause = None):
         self.source = source
         self.destination = destination
-        self.condition = condition
+        self.where_clause = where_clause

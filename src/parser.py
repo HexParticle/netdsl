@@ -1,13 +1,13 @@
 import ply.yacc as yacc
 from .lexer import tokens
-from .ast_nodes import Endpoint, Condition, FilterStatement
+from .ast_nodes import Endpoint, FilterStatement, WhereClause, Condition, ConditionList
 
 
 def p_statement_root(p):
     '''statement : FROM endpoint TO endpoint
                  | FROM endpoint TO endpoint where_clause'''
     if len(p) == 6:
-        p[0] = FilterStatement(source=p[2], destination=p[4], condition=p[5])
+        p[0] = FilterStatement(source=p[2], destination=p[4], where_clause=p[5])
     else:
         p[0] = FilterStatement(source=p[2], destination=p[4])
 
@@ -47,11 +47,30 @@ def p_endpoint_mac_only(p):
     p[0] = Endpoint(mac=p[1], ip=None, port=None)
 
 
+def p_condition(p):
+    '''
+    condition : FIELD OPERATOR VALUE
+                | FIELD OPERATOR NUMBER
+    '''
+    p[0] = Condition(field=p[1], operator=p[2], value=p[3])
+
+
+def p_condition_list(p):
+    '''
+    condition_list : condition 
+                    | condition_list COMMA condition
+    '''
+    if len(p) == 4:
+        p[0] = ConditionList(conditions=p[1] + [p[3]])
+    else:
+        p[0] = ConditionList(conditions=[p[1]])
+
+
 def p_where_clause(p):
-    '''where_clause : WHERE FIELD OPERATOR VALUE
-					| WHERE FIELD OPERATOR NUMBER
-	'''
-    p[0] = Condition(field=p[2], operator=p[3], value=p[4])
+    '''
+    where_clause : WHERE condition_list
+    '''
+    p[0] = WhereClause(condition_list=p[2])
 
 
 def p_error(p):

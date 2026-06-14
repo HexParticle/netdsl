@@ -1,30 +1,30 @@
-from .ast_nodes import FilterStatement
+from . import ast_nodes
 
 import enum
 
 
 PROTOCOL_FIELDS = [
     # TCP protocol fields
-    'TCP.WINDOW_SIZE', 'TCP.FLAGS', 'TCP.SEQ_NUM', 
-    'TCP.ACK_NUM', 'TCP.DATA_OFFSET', 'TCP.CHECKSUM', 
-    'TCP.URGENT_POINTER', 'TCP.SRC_PORT', 'TCP.DST_PORT'
+    'TCP.WIN_SIZE', 'TCP.FLAGS', 'TCP.SEQ_NUM', 
+    'TCP.ACK_NUM', 'TCP.DATA_OFF', 'TCP.CKSUM', 
+    'TCP.URG_PTR', 'TCP.SRC_PORT', 'TCP.DST_PORT',
 
     # IP protocol fields
-    'IP.VERSION', 'IP.IHL', 'IP.TTL', 'IP.CHECKSUM',
-    'IP.PROTOCOL', 'IP.FRAG_OFF', 'IP.LENGTH', 'IP.ID',
+    'IP.VER', 'IP.IHL', 'IP.TTL', 'IP.CKSUM',
+    'IP.PROTO', 'IP.FRAG_OFF', 'IP.LEN', 'IP.ID',
     'IP.DSCP', 'IP.ECN', 'IP.DF', 'IP.MF', 'IP.SRC_HOST',
     'IP.DST_HOST'
 ]
 
 
 FIELD_OFF_SIZE = {
-    'TCP.SRC_PORT': (0, 2),
-    'TCP.DST_PORT': (2, 2),
-    'TCP.SEQ_NUM': (4, 4),
-    'TCP.ACK_NUM': (8, 4),
-    'TCP.WINDOW_SIZE': (14, 2),
-    'TCP.CKSUM': (16, 2),
-    'TCP.URGENT_POINTER': (18, 2),
+    'TCP.SRC_PORT':     (0, 2),
+    'TCP.DST_PORT':     (2, 2),
+    'TCP.SEQ_NUM':      (4, 4),
+    'TCP.ACK_NUM':      (8, 4),
+    'TCP.WIN_SIZE':     (14, 2),
+    'TCP.CKSUM':        (16, 2),
+    'TCP.URG_PTR':      (18, 2),
 }
 
 
@@ -33,7 +33,7 @@ class EndpointType(enum.Enum):
     DESTINATION = enum.auto()
 
 
-def emit_bpf_endpoint(ast: FilterStatement, et: EndpointType):
+def emit_bpf_endpoint(ast: ast_nodes.FilterStatement, et: EndpointType):
     fragments = []
 
     if et == EndpointType.SOURCE:
@@ -66,7 +66,7 @@ def emit_bpf_endpoint(ast: FilterStatement, et: EndpointType):
     return " and ".join(fragments)
 
 
-def emit_bpf_endpoints(ast: FilterStatement):
+def emit_bpf_endpoints(ast: ast_nodes.FilterStatement):
     endpoint_str = emit_bpf_endpoint(ast, EndpointType.SOURCE)
     endpoint_str = f'{endpoint_str} and {emit_bpf_endpoint(ast, EndpointType.DESTINATION)}'
     return endpoint_str
@@ -82,9 +82,11 @@ def emit_bpf_protocol_field_condition_for_tcp(field: str, op: str, value: str):
         return f"TCP[{off_size[0]}:{off_size[1]}] {op} {value}"
 
 
-def emit_bpf_protocol_field_condition(ast: FilterStatement):
-    condition = ast.condition
+def emit_bpf_protocol_field_condition(condition: ast_nodes.Condition):
     field = condition.field
+
+    if field not in PROTOCOL_FIELDS:
+        raise ValueError(f"'{field}' cannot be identified as a protocol field.")
 
     if field.startswith('TCP'):
         return emit_bpf_protocol_field_condition_for_tcp(field, condition.operator, condition.value)
@@ -92,18 +94,19 @@ def emit_bpf_protocol_field_condition(ast: FilterStatement):
         pass
 
 
-def emit_bpf_condition(ast: FilterStatement):
-    if ast.condition:
-        field = ast.condition.field.upper()
+def emit_bpf_where_clause(where_clause: ast_nodes.WhereClause):
+    fragments = []
+    conditions = where_clause.condition_list
+    if where_clause and len(conditions) > 0:
+        for condition in conditions:
+            fragments.append(emit_bpf_protocol_field_condition(condition))
 
-        if field not in PROTOCOL_FIELDS:
-            raise ValueError(f"'{field}' cannot be identified as a protocol field.")
-
-        return emit_bpf_protocol_field_condition(ast)
-
-    return ''
+    return " and ".join(fragments)
 
 
-def emit_bpf(ast: FilterStatement):
-    fragments = filter(lambda x: x is not '', [emit_bpf_endpoints(ast), emit_bpf_condition(ast)])
+def emit_bpf(ast: ast_nodes.FilterStatement):
+    fragments = filter(
+        lambda x: x != '', 
+        [emit_bpf_endpoints(ast), emit_bpf_where_clause(ast.where_clause)]
+    )
     return " and ".join(fragments)
