@@ -77,9 +77,9 @@ def emit_bpf_protocol_field_condition_for_tcp(field: str, op: str, value: str):
     size = off_size[1]
 
     if size == 1:
-        return f"TCP[{off_size[0]}] {op} {value}"
+        return f"tcp[{off_size[0]}] {op} {value}"
     else:
-        return f"TCP[{off_size[0]}:{off_size[1]}] {op} {value}"
+        return f"tcp[{off_size[0]}:{off_size[1]}] {op} {value}"
 
 
 def emit_bpf_protocol_field_condition(condition: ast_nodes.Condition):
@@ -95,11 +95,15 @@ def emit_bpf_protocol_field_condition(condition: ast_nodes.Condition):
 
 
 def emit_bpf_where_clause(where_clause: ast_nodes.WhereClause):
+    if where_clause is None: return ''
+
     fragments = []
     conditions = where_clause.condition_list
     if where_clause and len(conditions) > 0:
         for condition in conditions:
-            fragments.append(emit_bpf_protocol_field_condition(condition))
+            field_condition_result = emit_bpf_protocol_field_condition(condition)
+            if field_condition_result:
+                fragments.append(field_condition_result)
 
     return " and ".join(fragments)
 

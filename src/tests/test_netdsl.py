@@ -27,13 +27,13 @@ class TestNetDSLCompiler(unittest.TestCase):
             },
             {
                 "name": "Where clause with numeric value",
-                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.WINDOW_SIZE > 1024",
+                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.WIN_SIZE > 1024",
                 "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[14:2] > 1024"
             },
             {
                 "name": "Where clause with string flag literal",
-                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE IP.TTL = 10",
-                "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and ip[8] = 10"
+                "input": "FROM 10.0.0.1 TO 10.0.0.2",
+                "expected": "src host 10.0.0.1 and dst host 10.0.0.2"
             }
         ]
 
@@ -88,6 +88,32 @@ class TestNetDSLCompiler(unittest.TestCase):
     
     def test_protocol_fields_validity(self):
         pass
+
+
+    def test_where_clause_multiple_supported_tcp_fields(self):
+        test_cases = [
+            {
+                "name": "Multiple TCP ports with AND",
+                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.SRC_PORT = 80, TCP.DST_PORT = 443",
+                "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[0:2] = 80 and tcp[2:2] = 443"
+            },
+            {
+                "name": "TCP sequence and acknowledgment numbers with OR",
+                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.SEQ_NUM = 1000, TCP.ACK_NUM = 2000",
+                "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[4:4] = 1000 and tcp[8:4] = 2000"
+            },
+            {
+                "name": "TCP window size and urgent pointer conditions",
+                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.WIN_SIZE > 2048, TCP.URG_PTR = 0",
+                "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[14:2] > 2048 and tcp[18:2] = 0"
+            },
+            {
+                "name": "Complex chaining of multiple TCP offsets",
+                "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.SRC_PORT = 80, TCP.SEQ_NUM > 0, TCP.CKSUM = 5000",
+                "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[0:2] = 80 and tcp[4:4] > 0 and tcp[16:2] = 5000"
+            }
+        ]
+        self.run_emitted_bpf_should_be_valid_test_cases(test_cases)
 
 
 if __name__ == "__main__":

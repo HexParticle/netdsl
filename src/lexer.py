@@ -5,7 +5,8 @@ tokens = (
     'IP_ADDRESS', 'NUMBER',
     'FIELD', 'OPERATOR', 'VALUE',
     'COLON', 'DOT', 'COMMA',
-    'MAC_ADDRESS', 'AT'
+    'MAC_ADDRESS', 'AT',
+    'AND', 'OR'
 )
 
 
@@ -14,6 +15,8 @@ t_DOT = r'\.'
 t_AT = r'\@'
 t_OPERATOR = r'!=|>=|<=|=|<|>'
 t_COMMA = r','
+t_AND = r'and'
+t_OR = r'or'
 
 
 reserved = {
