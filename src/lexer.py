@@ -6,7 +6,7 @@ tokens = (
     'FIELD', 'OPERATOR', 'VALUE',
     'COLON', 'DOT', 'COMMA',
     'MAC_ADDRESS', 'AT',
-    'AND', 'OR'
+    'AND', 'OR', 'ANY'
 )
 
 
@@ -15,14 +15,16 @@ t_DOT = r'\.'
 t_AT = r'\@'
 t_OPERATOR = r'!=|>=|<=|=|<|>'
 t_COMMA = r','
-t_AND = r'and'
-t_OR = r'or'
+t_AND = r'AND'
+t_OR = r'OR'
+t_ANY = r'ANY'
 
 
 reserved = {
     'FROM': 'FROM',
     'TO': 'TO',
-    'WHERE': 'WHERE'
+    'WHERE': 'WHERE',
+    'ANY': 'ANY'
 }
 
 

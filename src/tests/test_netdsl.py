@@ -48,9 +48,9 @@ class TestNetDSLCompiler(unittest.TestCase):
             "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.FLAGS =",
             "FROM 999.999.999.999 TO 10.0.0.1",
             "FROM 1234.1.1.1 TO 10.0.0.1",
-            "FROM aa:bb:cc:dd:ee:ff TO 12345",
+            "FROM @aa:bb:cc:dd:ee:ff TO 12345",
             "FROM TO",
-            "FROM 1.1.1.1:a-a-a-a-a-a TO"
+            "FROM 1.1.1.1@a-a-a-a-a-a TO"
         ]
 
         for bad_input in invalid_inputs:
@@ -63,7 +63,7 @@ class TestNetDSLCompiler(unittest.TestCase):
         test_cases = [
             {
                 'name': 'Test From Mac to Mac is Okay',
-                'input': 'FROM aa:bb:cc:dd:ee:ff TO ff:ee:dd:cc:bb:aa',
+                'input': 'FROM @aa:bb:cc:dd:ee:ff TO @ff:ee:dd:cc:bb:aa',
                 'expected': 'ether src aa:bb:cc:dd:ee:ff and ether dst ff:ee:dd:cc:bb:aa'
             },
             {
@@ -73,21 +73,17 @@ class TestNetDSLCompiler(unittest.TestCase):
             },
             {
                 'name': 'Test From Mac to IP:port@Mac is Okay',
-                'input': 'FROM aa:bb:cc:dd:ee:ff TO 2.2.2.2:2222@ff:ee:dd:cc:bb:aa',
+                'input': 'FROM @aa:bb:cc:dd:ee:ff TO 2.2.2.2:2222@ff:ee:dd:cc:bb:aa',
                 'expected': 'ether src aa:bb:cc:dd:ee:ff and dst host 2.2.2.2 and dst port 2222 and ether dst ff:ee:dd:cc:bb:aa'
             },
             {
                 'name': 'Test From Mac to IP:port is Okay',
-                'input': 'FROM aa:bb:cc:dd:ee:ff TO 2.2.2.2:2222',
+                'input': 'FROM @aa:bb:cc:dd:ee:ff TO 2.2.2.2:2222',
                 'expected': 'ether src aa:bb:cc:dd:ee:ff and dst host 2.2.2.2 and dst port 2222'
             }
         ]
 
         self.run_emitted_bpf_should_be_valid_test_cases(test_cases)
-
-    
-    def test_protocol_fields_validity(self):
-        pass
 
 
     def test_where_clause_multiple_supported_tcp_fields(self):
@@ -112,6 +108,27 @@ class TestNetDSLCompiler(unittest.TestCase):
                 "input": "FROM 10.0.0.1 TO 10.0.0.2 WHERE TCP.SRC_PORT = 80, TCP.SEQ_NUM > 0, TCP.CKSUM = 5000",
                 "expected": "src host 10.0.0.1 and dst host 10.0.0.2 and tcp[0:2] = 80 and tcp[4:4] > 0 and tcp[16:2] = 5000"
             }
+        ]
+        self.run_emitted_bpf_should_be_valid_test_cases(test_cases)
+
+
+    def test_any_endpoints(self):
+        test_cases = [
+            {
+                "name": "Any IP",
+                "input": "FROM ANY TO ANY",
+                "expected": ""
+            },
+            {
+                "name": "Any IP and Any Port to some other IP",
+                "input": "FROM ANY TO 192.168.1.1",
+                "expected": "dst host 192.168.1.1"
+            },
+            {
+                "name": "Any IP, a specific Port and Any MAC to some other IP",
+                "input": "FROM ANY:12345 TO 192.168.1.1",
+                "expected": "src port 12345 and dst host 192.168.1.1"
+            },
         ]
         self.run_emitted_bpf_should_be_valid_test_cases(test_cases)
 

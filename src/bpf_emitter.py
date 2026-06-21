@@ -37,46 +37,41 @@ def emit_bpf_endpoint(ast: ast_nodes.FilterStatement, et: EndpointType):
     fragments = []
 
     if et == EndpointType.SOURCE:
-        if ast.source.ip:
+        if ast.source.ip and ast.source.ip != "ANY":
             fragments.append(f'src host {ast.source.ip}')
     
-        if ast.source.port:
-            if ast.source.ip is None:
-                raise ValueError("source port without an IP is not supported.")
-
+        if ast.source.port and ast.source.port != "ANY":
             fragments.append(f'src port {ast.source.port}')
 
-        if ast.source.mac:
+        if ast.source.mac and ast.source.mac != "ANY":
             fragments.append(f'ether src {ast.source.mac}')
     else:
-        if ast.destination.ip:
+        if ast.destination.ip and ast.destination.ip != "ANY":
             fragments.append(f'dst host {ast.destination.ip}')
     
-        if ast.destination.port:
-            if ast.destination.ip is None:
-                raise ValueError("destination port without an IP is not supported.")
-
+        if ast.destination.port and ast.destination.port != "ANY":
             fragments.append(f'dst port {ast.destination.port}')
 
-        if ast.destination.mac:
+        if ast.destination.mac and ast.destination.mac != "ANY":
             fragments.append(f'ether dst {ast.destination.mac}')
 
-    if len(fragments) == 0: return None
+    if len(fragments) == 0: return ''
 
     return " and ".join(fragments)
 
 
 def emit_bpf_endpoints(ast: ast_nodes.FilterStatement):
-    endpoint_str = emit_bpf_endpoint(ast, EndpointType.SOURCE)
-    endpoint_str = f'{endpoint_str} and {emit_bpf_endpoint(ast, EndpointType.DESTINATION)}'
-    return endpoint_str
+    endpoint_str_src = emit_bpf_endpoint(ast, EndpointType.SOURCE)
+    endpoint_str_dst = emit_bpf_endpoint(ast, EndpointType.DESTINATION)
+
+    return " and ".join(filter(lambda ep: ep != '', [endpoint_str_src, endpoint_str_dst]))
 
 
 def emit_bpf_protocol_field_condition_for_tcp(field: str, op: str, value: str):
     off_size = FIELD_OFF_SIZE.get(field)
     size = off_size[1]
 
-    if size == 1:
+    if size == 1: # 1-byte field
         return f"tcp[{off_size[0]}] {op} {value}"
     else:
         return f"tcp[{off_size[0]}:{off_size[1]}] {op} {value}"
